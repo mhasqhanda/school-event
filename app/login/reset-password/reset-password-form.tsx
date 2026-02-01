@@ -1,9 +1,6 @@
 "use client";
 
-
-export const dynamic = "force-dynamic";
-
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,16 +13,23 @@ export default function ResetPasswordForm() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [accessToken, setAccessToken] = useState<string | null>(null);
+
   const { toast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClient();
 
-  const accessToken =
-    searchParams.get("access_token") || searchParams.get("code");
+  // ✅ AMAN: baca searchParams DI useEffect
+  useEffect(() => {
+    const token =
+      searchParams.get("access_token") || searchParams.get("code");
+    setAccessToken(token);
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!accessToken) {
       toast({
         title: "Token tidak valid",
@@ -34,7 +38,8 @@ export default function ResetPasswordForm() {
       });
       return;
     }
-    if (!password || password.length < 6) {
+
+    if (password.length < 6) {
       toast({
         title: "Password terlalu pendek",
         description: "Password minimal 6 karakter.",
@@ -42,6 +47,7 @@ export default function ResetPasswordForm() {
       });
       return;
     }
+
     if (password !== confirmPassword) {
       toast({
         title: "Konfirmasi password tidak cocok",
@@ -50,9 +56,11 @@ export default function ResetPasswordForm() {
       });
       return;
     }
+
     setLoading(true);
     const { error } = await supabase.auth.updateUser({ password });
     setLoading(false);
+
     if (error) {
       toast({
         title: "Gagal reset password",
@@ -81,52 +89,29 @@ export default function ResetPasswordForm() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label htmlFor="password" className="block text-gray-200 mb-1">
-                Password Baru
-              </label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-                className="bg-white/10 border-white/20 text-white"
-                placeholder="Password baru"
-              />
-            </div>
-            <div>
-              <label
-                htmlFor="confirmPassword"
-                className="block text-gray-200 mb-1"
-              >
-                Konfirmasi Password
-              </label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                minLength={6}
-                className="bg-white/10 border-white/20 text-white"
-                placeholder="Ulangi password baru"
-              />
-            </div>
-            <Button
-              type="submit"
-              className="w-full bg-gradient-to-r from-blue-500 to-orange-500 hover:from-blue-600 hover:to-orange-600 text-white font-semibold"
-              disabled={loading}
-            >
+            <Input
+              type="password"
+              placeholder="Password baru"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              minLength={6}
+              required
+            />
+            <Input
+              type="password"
+              placeholder="Konfirmasi password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              minLength={6}
+              required
+            />
+            <Button type="submit" disabled={loading} className="w-full">
               {loading ? "Menyimpan..." : "Reset Password"}
             </Button>
           </form>
+
           <div className="mt-6 text-center">
-            <Link
-              href="/login"
-              className="text-blue-400 hover:underline text-sm"
-            >
+            <Link href="/login" className="text-blue-400 hover:underline text-sm">
               Kembali ke Login
             </Link>
           </div>
