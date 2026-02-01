@@ -20,7 +20,6 @@ export default function ResetPasswordForm() {
   const searchParams = useSearchParams();
   const supabase = createClient();
 
-  // ✅ AMAN: baca searchParams DI useEffect
   useEffect(() => {
     const token =
       searchParams.get("access_token") || searchParams.get("code");
@@ -94,7 +93,6 @@ export default function ResetPasswordForm() {
               placeholder="Password baru"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              minLength={6}
               required
             />
             <Input
@@ -102,7 +100,6 @@ export default function ResetPasswordForm() {
               placeholder="Konfirmasi password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              minLength={6}
               required
             />
             <Button type="submit" disabled={loading} className="w-full">
