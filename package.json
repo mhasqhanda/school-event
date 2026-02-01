@@ -75,9 +75,9 @@
     "tailwindcss": "^3.4.17",
     "typescript": "^5"
   },
-  "packageManager": "pnpm@latest"
-,
-  "engines": {
+
+  "engines":
+   {
   "node": "20.x"
 }
 
