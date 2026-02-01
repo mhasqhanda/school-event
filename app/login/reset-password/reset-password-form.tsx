@@ -1,0 +1,134 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { createClient } from "@/lib/supabase/client";
+
+export default function ResetPasswordForm() {
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { toast } = useToast();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const supabase = createClient();
+
+  const accessToken =
+    searchParams.get("access_token") || searchParams.get("code");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!accessToken) {
+      toast({
+        title: "Token tidak valid",
+        description: "Link reset password tidak valid atau sudah kadaluarsa.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (!password || password.length < 6) {
+      toast({
+        title: "Password terlalu pendek",
+        description: "Password minimal 6 karakter.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (password !== confirmPassword) {
+      toast({
+        title: "Konfirmasi password tidak cocok",
+        description: "Pastikan kedua password sama persis.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.updateUser({ password });
+    setLoading(false);
+    if (error) {
+      toast({
+        title: "Gagal reset password",
+        description: error.message,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Password berhasil direset!",
+        description: "Silakan login dengan password baru.",
+      });
+      router.push("/login");
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#111827] to-[#1C294A]">
+      <Card className="w-full max-w-md bg-slate-800/80 border-none shadow-xl">
+        <CardHeader>
+          <CardTitle className="text-2xl text-white text-center font-bold">
+            Setel Password Baru
+          </CardTitle>
+          <p className="text-gray-300 text-center mt-2 text-sm">
+            Masukkan password baru Anda di bawah ini.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label htmlFor="password" className="block text-gray-200 mb-1">
+                Password Baru
+              </label>
+              <Input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+                className="bg-white/10 border-white/20 text-white"
+                placeholder="Password baru"
+              />
+            </div>
+            <div>
+              <label
+                htmlFor="confirmPassword"
+                className="block text-gray-200 mb-1"
+              >
+                Konfirmasi Password
+              </label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                minLength={6}
+                className="bg-white/10 border-white/20 text-white"
+                placeholder="Ulangi password baru"
+              />
+            </div>
+            <Button
+              type="submit"
+              className="w-full bg-gradient-to-r from-blue-500 to-orange-500 hover:from-blue-600 hover:to-orange-600 text-white font-semibold"
+              disabled={loading}
+            >
+              {loading ? "Menyimpan..." : "Reset Password"}
+            </Button>
+          </form>
+          <div className="mt-6 text-center">
+            <Link
+              href="/login"
+              className="text-blue-400 hover:underline text-sm"
+            >
+              Kembali ke Login
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
